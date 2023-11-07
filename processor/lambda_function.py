@@ -29,14 +29,20 @@ def handler(event, context):
     # return 'Hello from AWS Lambda using Python' + sys.version + '!'
 
 
-def get_json(filepath: str) -> list:
-    try:
-        with open(filepath) as f:
-            data = json.load(f)
-        return data
+def get_json(filenub: array) -> dict:
+    if filenub:
+        data: dict = {}
+        for symbol in filenub:
+            filepath = f"/home/drich/financedata/{symbol}.json"
 
-    except Exception as e:
-        print(f'error: {e}')
+            try:
+                with open(filepath) as f:
+                    json_data = json.load(f)
+                    data[symbol] = json_data
+
+            except Exception as e:
+                print(f'error: {e}')
+        return data
 
 
 def calculate_week_difference(week_data):
