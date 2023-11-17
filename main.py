@@ -7,8 +7,6 @@ import processor
 import store_data
 
 
-
-
 def retrieve_nasdaq_symbols():
     try:
         nasdaq_list = processor.get_json(["nasdaq_list"])
@@ -61,18 +59,27 @@ def read_copied_txt_symbols():
     except Exception as e:
         print(f'error: {e}')
 
-def run_retrieve_symbols_data(symbols: list):
-    event = {"symbols": ["AMZN"]}
-    response = retrieve_data.handler(event, None)
-    print(f'--> response is: {response}')
 
-def run_store_symbols_data():
-    event = {"symbol": "AMZN"}
-    response = store_data.handler(event, None)
-    print(f'--> response is: {response}')
+def run_retrieve_symbols_data(symbols: list):
+    if symbols:
+        event = {"symbols": symbols}
+        response = retrieve_data.handler(event, None)
+        print(f'--> response is: {response}')
+        return response
+
+
+def run_store_symbols_data(symbols: list):
+    for symbol in symbols:
+        event = {"symbol": symbol}
+        response = store_data.handler(event, None)
+        print(f'--> response is: {response}')
+        return response
+
 
 if __name__ == '__main__':
-
+    symbols = ["msft"]
+    run_retrieve_symbols_data(symbols)
+    run_store_symbols_data(symbols)
     # read_copied_txt_symbols()
     # read_txt_symbols()
     # retrieve_nasdaq_symbols()
