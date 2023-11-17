@@ -31,6 +31,7 @@ def get_json(filenubs: list) -> dict:
     if filenubs:
         data: dict = {}
         for symbol in filenubs:
+            symbol = symbol.lower()
             filepath = f"/home/drich/financedata/{symbol}.json"
 
             try:

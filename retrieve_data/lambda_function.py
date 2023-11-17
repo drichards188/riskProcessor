@@ -28,7 +28,7 @@ def handler(event, context):
                     logger.error(e)
                     print(f'error: {e}')
 
-            return {"response": all_symbols_data}
+            return {"response": "success"}
         return {"response": "No symbols found"}
     except Exception as e:
         logger.error(e)
