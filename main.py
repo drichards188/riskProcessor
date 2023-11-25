@@ -77,7 +77,7 @@ def run_store_symbols_data(symbols: list):
 
 
 if __name__ == '__main__':
-    response = retrieve_data.handler({"symbol": "wynn"}, None)
+    response = retrieve_data.handler({"symbol": "sam"}, None)
     storage_response = store_data.store_df(response, "stocks")
 
     # symbols = ["lulu"]

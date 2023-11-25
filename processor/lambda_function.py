@@ -1,4 +1,3 @@
-
 import logging
 import json
 from array import array
@@ -103,6 +102,33 @@ def evaluate_sharpe_ratio(ratio: float) -> object:
 
     print('result of sharpe eval {result}')
     return {"ratio": ratio, "eval": result}
+
+
+def process_qandl_data(data: json, symbol: str) -> pd.DataFrame:
+    if data:
+        json_data = json.loads(data)
+        column_rows = json_data["dataset_data"]["column_names"]
+        specific_data = json_data["dataset_data"]["data"]
+
+        final_pd = {}
+        symbol_list = []
+        close_list = []
+        # index_list = []
+        date_list = []
+        i = 0
+        while i < len(specific_data):
+            symbol_list.append(symbol)
+            close_list.append(specific_data[i][4])
+            date_list.append(specific_data[i][0])
+            final_pd[specific_data[i][0]] = [symbol, "nasdaq", specific_data[i][4]]
+            i += 1
+
+        final_pd = {"Date": date_list, "Symbol": symbol_list, "Close": close_list}
+        df = pd.DataFrame(final_pd)
+        return df
+
+    else:
+        return pd.DataFrame()
 
 
 def calculate_correlation():

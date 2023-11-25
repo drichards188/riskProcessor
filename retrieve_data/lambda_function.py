@@ -1,9 +1,10 @@
 import logging
 import os
 
-import pandas as pd
 import requests
 import json
+
+from processor.lambda_function import process_qandl_data
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -66,7 +67,7 @@ def fetch_alpha_vantage_data(symbol: str):
         # Check if the request was successful (status code 200)
         if response.status_code == 200:
             # Print the content of the response
-            print(response.text)
+            # print(response.text)
             return response.text
         else:
             # Print an error message if the request was not successful
@@ -97,35 +98,11 @@ def get_from_qandl(symbol: str):
         # Check if the request was successful (status code 200)
         if response.status_code == 200:
             # Print the content of the response
-            print(response.text)
+            # print(response.text)
             return response.text
         else:
             # Print an error message if the request was not successful
             print(f"---> response fail: {response.text}")
 
 
-def process_qandl_data(data: json, symbol: str) -> pd.DataFrame:
-    if data:
-        json_data = json.loads(data)
-        column_rows = json_data["dataset_data"]["column_names"]
-        specific_data = json_data["dataset_data"]["data"]
 
-        final_pd = {}
-        symbol_list = []
-        close_list = []
-        # index_list = []
-        date_list = []
-        i = 0
-        while i < len(specific_data):
-            symbol_list.append(symbol)
-            close_list.append(specific_data[i][4])
-            date_list.append(specific_data[i][0])
-            final_pd[specific_data[i][0]] = [symbol, "nasdaq", specific_data[i][4]]
-            i += 1
-
-        final_pd = {"Date": date_list, "Symbol": symbol_list, "Close": close_list}
-        df = pd.DataFrame(final_pd)
-        return df
-
-    else:
-        return pd.DataFrame()
