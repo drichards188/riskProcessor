@@ -22,8 +22,6 @@ def handler(event, context):
         dates = []
         closes = []
         for key in df:
-
-
             # only use keys with "close" in it
             # clean_key = key.split(".", 2)[0]
 
@@ -46,12 +44,14 @@ def handler(event, context):
         print(f'--> error is: {e}')
         raise e
 
+
 def store_df(df, table_name: str):
     try:
         df.to_sql(table_name, engine, if_exists='append')
     except Exception as e:
         print(f'--> error is: {e}')
         raise e
+
 
 def store_symbols(symbol_list: list[str], index_symbol: str):
     last_updated = []
