@@ -1,6 +1,7 @@
 import logging
 import os
 
+import pandas as pd
 import requests
 import json
 
@@ -10,26 +11,33 @@ logger.setLevel(logging.INFO)
 
 def handler(event, context):
     try:
-        logger.info('## EVENT')
-        logger.info(event)
-
-        all_symbols_data = {}
-
-        if "symbols" in event:
-            for symbol in event["symbols"]:
-                try:
-                    symbol = symbol.lower()
-                    data = fetch_alpha_vantage_data(symbol)
-                    json_data = json.loads(data)
-                    all_symbols_data[symbol] = json_data
-                    resp = write_file(symbol, json_data)
-                    print(f'--> wrote file resp {resp}')
-                except Exception as e:
-                    logger.error(e)
-                    print(f'error: {e}')
-
-            return {"response": "success"}
-        return {"response": "No symbols found"}
+        if "symbol" in event:
+            symbol = event["symbol"]
+            symbol = symbol.lower()
+            response = get_from_qandl(symbol)
+            process_response = process_qandl_data(response, symbol)
+            if not process_response.empty:
+                return process_response
+        # logger.info('## EVENT')
+        # logger.info(event)
+        #
+        # all_symbols_data = {}
+        #
+        # if "symbols" in event:
+        #     for symbol in event["symbols"]:
+        #         try:
+        #             symbol = symbol.lower()
+        #             data = fetch_alpha_vantage_data(symbol)
+        #             json_data = json.loads(data)
+        #             all_symbols_data[symbol] = json_data
+        #             resp = write_file(symbol, json_data)
+        #             print(f'--> wrote file resp {resp}')
+        #         except Exception as e:
+        #             logger.error(e)
+        #             print(f'error: {e}')
+        #
+        #     return {"response": "success"}
+        # return {"response": "No symbols found"}
     except Exception as e:
         logger.error(e)
         raise e
@@ -76,3 +84,57 @@ def get_symbol_list(filepath: str):
         print(f'error: {e}')
 
     return symbols
+
+
+def get_from_qandl(symbol: str):
+    if symbol:
+        api_key = os.environ.get('QANDL_API_KEY')
+        url = f'https://www.quandl.com/api/v3/datasets/WIKI/{symbol}/data.json?api_key={api_key}'
+
+        # Send a GET request
+        response = requests.get(url)
+
+        # Check if the request was successful (status code 200)
+        if response.status_code == 200:
+            # Print the content of the response
+            print(response.text)
+            return response.text
+        else:
+            # Print an error message if the request was not successful
+            print(f"---> response fail: {response.text}")
+
+
+def process_qandl_data(data: json, symbol: str) -> pd.DataFrame:
+    if data:
+        json_data = json.loads(data)
+        column_rows = json_data["dataset_data"]["column_names"]
+        specific_data = json_data["dataset_data"]["data"]
+
+        final_pd = {}
+        symbol_list = []
+        close_list = []
+        # index_list = []
+        date_list = []
+        i = 0
+        while i < len(specific_data):
+            symbol_list.append(symbol)
+            close_list.append(specific_data[i][4])
+            # index_list.append("nasdaq")
+            date_list.append(specific_data[i][0])
+
+            # final_pd["Symbol"] = symbol
+            # final_pd["Index"] = "nasdaq"
+            # final_pd["Close"] = specific_data[i][4]
+            # final_pd[specific_data[i][0]] = {"Symbol": symbol, "Index": "nasdaq", "Close": specific_data[i][4]}
+            final_pd[specific_data[i][0]] = [symbol, "nasdaq", specific_data[i][4]]
+            i += 1
+
+        column_rows = ["Symbol", "LastUpdated" "Date", "Close"]
+
+        # final_pd = {"2018-3-27": ["aapl", "nasdaq", 100.00], "2018-3-28": ["aapl", "nasdaq", 101.00]}
+        final_pd = {"Date": date_list, "Symbol": symbol_list, "Close": close_list}
+        df = pd.DataFrame(final_pd)
+        return df
+
+    else:
+        return pd.DataFrame()

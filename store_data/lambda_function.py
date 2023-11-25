@@ -46,6 +46,12 @@ def handler(event, context):
         print(f'--> error is: {e}')
         raise e
 
+def store_df(df, table_name: str):
+    try:
+        df.to_sql(table_name, engine, if_exists='append')
+    except Exception as e:
+        print(f'--> error is: {e}')
+        raise e
 
 def store_symbols(symbol_list: list[str], index_symbol: str):
     last_updated = []

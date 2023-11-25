@@ -77,9 +77,12 @@ def run_store_symbols_data(symbols: list):
 
 
 if __name__ == '__main__':
-    symbols = ["msft"]
-    run_retrieve_symbols_data(symbols)
-    run_store_symbols_data(symbols)
+    response = retrieve_data.handler({"symbol": "wynn"}, None)
+    storage_response = store_data.store_df(response, "stocks")
+
+    # symbols = ["lulu"]
+    # run_retrieve_symbols_data(symbols)
+    # run_store_symbols_data(symbols)
     # read_copied_txt_symbols()
     # read_txt_symbols()
     # retrieve_nasdaq_symbols()
