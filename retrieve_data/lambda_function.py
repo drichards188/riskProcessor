@@ -105,4 +105,22 @@ def get_from_qandl(symbol: str):
             print(f"---> response fail: {response.text}")
 
 
+def get_from_market_data(symbol: str):
+    if symbol:
+        api_key = os.environ.get('MARKET_DATA_API_KEY')
+        # url = f'https://marketdata.websol.barchart.com/getQuote.json?apikey={api_key}&symbols={symbol}'
+        url = f'https://api.marketdata.app/v1/stocks/candles/D/AAPL?apikey={api_key}'
+        # Send a GET request
+        response = requests.get(url)
 
+        # Check if the request was successful (status code 200)
+        if response.status_code == 200:
+            # Print the content of the response
+            # print(response.text)
+            decoded = response.content.decode()
+            json_data = json.loads(decoded)
+            return json_data["l"]
+
+        else:
+            # Print an error message if the request was not successful
+            print(f"---> response fail: {response.text}")

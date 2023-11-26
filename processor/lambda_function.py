@@ -5,6 +5,8 @@ from array import array
 import numpy as np
 import pandas as pd
 
+from lib.db_helper import DbHelper
+
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
@@ -84,6 +86,34 @@ def handle_get_sharpe_ratio(security_symbol: str) -> float:
     return sharpe_ratio_annualized
 
 
+def calc_sharpe_ratio_sql(symbol: str) -> float:
+    try:
+        statement = f"SELECT * FROM stocks WHERE Symbol='{symbol}'"
+        db_helper = DbHelper()
+        result = db_helper.execute_query(statement)
+        results = []
+        excess_returns = []
+        risk_free_rate = 0.001
+        sharpe_ratio = float()
+        for row in result:
+            results.append(row[3])
+
+        i = 1
+        for close in results:
+            if i + 1 < len(results):
+                difference = float(close) - float(results[i])
+                rounded_difference = round(difference, 2)
+                excess_returns.append(rounded_difference / risk_free_rate)
+                i += 1
+
+        sharpe_ratio = np.mean(excess_returns) / np.std(excess_returns)
+
+        return sharpe_ratio
+    except Exception as e:
+        print(f'--> error is: {e}')
+        raise e
+
+
 def evaluate_sharpe_ratio(ratio: float) -> object:
     result = ""
 
@@ -129,6 +159,10 @@ def process_qandl_data(data: json, symbol: str) -> pd.DataFrame:
 
     else:
         return pd.DataFrame()
+
+
+def process_market_data(data):
+    return True
 
 
 def calculate_correlation():
