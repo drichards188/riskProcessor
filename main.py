@@ -86,8 +86,8 @@ if __name__ == '__main__':
     # record_count = response.count()
     # processor_response = process_market_data(response)
 
-    sharpe_ratio = processor.calc_sharpe_ratio_sql("lulu")
-
+    sharpe_ratio, data_point_count = processor.calc_sharpe_ratio_sql("lulu")
+    print(f'--> sharpe_ratio is: {sharpe_ratio} using {data_point_count} data points')
 
     # symbols = ["lulu"]
     # run_retrieve_symbols_data(symbols)

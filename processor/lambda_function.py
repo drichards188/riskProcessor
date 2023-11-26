@@ -86,7 +86,7 @@ def handle_get_sharpe_ratio(security_symbol: str) -> float:
     return sharpe_ratio_annualized
 
 
-def calc_sharpe_ratio_sql(symbol: str) -> float:
+def calc_sharpe_ratio_sql(symbol: str) -> tuple:
     try:
         statement = f"SELECT * FROM stocks WHERE Symbol='{symbol}'"
         db_helper = DbHelper()
@@ -94,6 +94,7 @@ def calc_sharpe_ratio_sql(symbol: str) -> float:
         results = []
         excess_returns = []
         risk_free_rate = 0.001
+        data_point_count = 0
         sharpe_ratio = float()
         for row in result:
             results.append(row[3])
@@ -104,11 +105,12 @@ def calc_sharpe_ratio_sql(symbol: str) -> float:
                 difference = float(close) - float(results[i])
                 rounded_difference = round(difference, 2)
                 excess_returns.append(rounded_difference / risk_free_rate)
+                data_point_count += 1
                 i += 1
 
         sharpe_ratio = np.mean(excess_returns) / np.std(excess_returns)
 
-        return sharpe_ratio
+        return sharpe_ratio, data_point_count
     except Exception as e:
         print(f'--> error is: {e}')
         raise e
