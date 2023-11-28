@@ -5,6 +5,9 @@ import pandas as pd
 import retrieve_data
 import processor
 import store_data
+from processor import process_market_data
+from processor.lambda_function import sic_lookup_table
+from retrieve_data import get_from_market_data
 
 
 def retrieve_nasdaq_symbols():
@@ -77,8 +80,19 @@ def run_store_symbols_data(symbols: list):
 
 
 if __name__ == '__main__':
-    response = retrieve_data.handler({"symbol": "sam"}, None)
-    storage_response = store_data.store_df(response, "stocks")
+    # response = retrieve_data.handler({"symbol": "sam"}, None)
+    # storage_response = store_data.store_df(response, "stocks")
+
+    # response: list[str] = get_from_market_data("msft")
+    # record_count = response.count()
+    # processor_response = process_market_data(response)
+
+    # sharpe_ratio, data_point_count = processor.calc_sharpe_ratio_sql("lulu")
+    # print(f'--> sharpe_ratio is: {sharpe_ratio} using {data_point_count} data points')
+
+    # response = sic_lookup("lulu")
+
+    sic_lookup_table("indexSymbols")
 
     # symbols = ["lulu"]
     # run_retrieve_symbols_data(symbols)
