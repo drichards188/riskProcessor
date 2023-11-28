@@ -1,9 +1,12 @@
 import logging
 import json
+import os
+import time
 from array import array
 
 import numpy as np
 import pandas as pd
+import requests
 
 from lib.db_helper import DbHelper
 
@@ -88,29 +91,34 @@ def handle_get_sharpe_ratio(security_symbol: str) -> float:
 
 def calc_sharpe_ratio_sql(symbol: str) -> tuple:
     try:
-        statement = f"SELECT * FROM stocks WHERE Symbol='{symbol}'"
+        statement = f"SELECT Close FROM stocks WHERE Symbol='{symbol}'"
         db_helper = DbHelper()
         result = db_helper.execute_query(statement)
-        results = []
-        excess_returns = []
-        risk_free_rate = 0.001
-        data_point_count = 0
-        sharpe_ratio = float()
-        for row in result:
-            results.append(row[3])
 
-        i = 1
-        for close in results:
-            if i + 1 < len(results):
-                difference = float(close) - float(results[i])
-                rounded_difference = round(difference, 2)
-                excess_returns.append(rounded_difference / risk_free_rate)
-                data_point_count += 1
-                i += 1
+        if result is not None:
+            results = []
+            excess_returns = []
+            risk_free_rate = 0.001
+            data_point_count = 0
+            sharpe_ratio = float()
+            for row in result:
+                # since selecting only Close, 0 column returned
+                results.append(row[0])
 
-        sharpe_ratio = np.mean(excess_returns) / np.std(excess_returns)
+            i = 1
+            for close in results:
+                if i + 1 < len(results):
+                    difference = float(close) - float(results[i])
+                    rounded_difference = round(difference, 2)
+                    excess_returns.append(rounded_difference / risk_free_rate)
+                    data_point_count += 1
+                    i += 1
 
-        return sharpe_ratio, data_point_count
+            sharpe_ratio = np.mean(excess_returns) / np.std(excess_returns)
+
+            return sharpe_ratio, data_point_count
+        else:
+            raise Exception("No data found")
     except Exception as e:
         print(f'--> error is: {e}')
         raise e
@@ -169,3 +177,67 @@ def process_market_data(data):
 
 def calculate_correlation():
     return
+
+
+def sic_lookup_table(table: str):
+    if table:
+        api_key = os.environ.get('POLYGON_API_KEY')
+        db_helper = DbHelper()
+
+        statement = f"SELECT Symbol FROM indexSymbols;"
+
+        result = db_helper.execute_query(statement)
+
+        symbols = []
+        industry_titles = []
+
+        for row in result:
+            symbol = row[0]
+            symbols.append(symbol)
+
+        i = 363
+        while i < len(symbols):
+            if i % 5 == 0 and i != 0:
+                print(f"sleeping on {i}")
+                time.sleep(61)
+            s = symbols[i]
+            clean_symbol = s.strip("'")
+
+            url = f'https://api.polygon.io/v3/reference/tickers/{clean_symbol}?apiKey={api_key}'
+
+            response = requests.get(url)
+
+            if response.status_code == 200:
+                json_data = json.loads(response.text)
+                if "results" in json_data and "sic_code" in json_data["results"]:
+                    sic_code = json_data["results"]["sic_code"]
+
+                try:
+                    industry_title = translate_sic_code(sic_code)
+
+                    statement = f"UPDATE indexSymbols SET Industry='{industry_title}' WHERE Symbol='{s}';"
+
+                    print(f"updating {s}")
+                    db_helper.execute_update(statement)
+
+                    print("Industry title updated")
+
+                    i += 1
+                except Exception as e:
+                    print(f'--> error is: {e}')
+                    industry_titles.append("None")
+                    i += 1
+            else:
+                print(f"--> response fail: {response.text}")
+                i += 1
+
+
+def translate_sic_code(code: str) -> str:
+    if code:
+        db_helper = DbHelper()
+        statement = f"SELECT `Industry Title` FROM sicCodes WHERE `SIC Code`={code};"
+        result = db_helper.execute_query(statement)
+
+        for row in result:
+            industry_title = row[0]
+            return industry_title

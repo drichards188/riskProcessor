@@ -33,3 +33,11 @@ class DbHelper():
             print(f'--> error is: {e}')
             raise e
 
+    def execute_update(self, statement: str):
+        try:
+            with self.engine.connect() as connection:
+                connection.execute(text(statement))
+                connection.commit()
+        except Exception as e:
+            print(f'--> error is: {e}')
+            raise e

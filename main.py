@@ -6,6 +6,7 @@ import retrieve_data
 import processor
 import store_data
 from processor import process_market_data
+from processor.lambda_function import sic_lookup_table
 from retrieve_data import get_from_market_data
 
 
@@ -86,8 +87,12 @@ if __name__ == '__main__':
     # record_count = response.count()
     # processor_response = process_market_data(response)
 
-    sharpe_ratio, data_point_count = processor.calc_sharpe_ratio_sql("lulu")
-    print(f'--> sharpe_ratio is: {sharpe_ratio} using {data_point_count} data points')
+    # sharpe_ratio, data_point_count = processor.calc_sharpe_ratio_sql("lulu")
+    # print(f'--> sharpe_ratio is: {sharpe_ratio} using {data_point_count} data points')
+
+    # response = sic_lookup("lulu")
+
+    sic_lookup_table("indexSymbols")
 
     # symbols = ["lulu"]
     # run_retrieve_symbols_data(symbols)

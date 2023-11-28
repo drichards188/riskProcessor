@@ -4,6 +4,7 @@ import os
 import requests
 import json
 
+from lib import DbHelper
 from processor.lambda_function import process_qandl_data
 
 logger = logging.getLogger()
@@ -124,3 +125,21 @@ def get_from_market_data(symbol: str):
         else:
             # Print an error message if the request was not successful
             print(f"---> response fail: {response.text}")
+
+
+def sic_lookup(symbol: str):
+    if symbol:
+        api_key = os.environ.get('POLYGON_API_KEY')
+
+        url = f'https://api.polygon.io/v3/reference/tickers/AAPL?apiKey={api_key}'
+
+        response = requests.get(url)
+
+        if response.status_code == 200:
+            json_data = json.loads(response.text)
+            sic_code = json_data["results"]["sic_code"]
+            return sic_code
+        else:
+            print(f"--> response fail: {response.text}")
+
+
