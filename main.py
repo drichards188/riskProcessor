@@ -9,6 +9,7 @@ import store_data
 from processor import process_market_data
 from processor.lambda_function import sic_lookup_table, calculate_correlation
 from retrieve_data import get_from_market_data
+from store_data.lambda_function import store_sharpe_ratio
 
 
 def retrieve_nasdaq_symbols():
@@ -81,7 +82,7 @@ def run_store_symbols_data(symbols: list):
 
 
 if __name__ == '__main__':
-    command: str = "correlation"
+    command: str = "sharpe_ratio"
 
     if command == "retrieve":
         response = retrieve_data.handler({"symbol": "sam"}, None)
@@ -95,8 +96,13 @@ if __name__ == '__main__':
     # record_count = response.count()
     # processor_response = process_market_data(response)
 
-    # sharpe_ratio, data_point_count = processor.calc_sharpe_ratio_sql("lulu")
-    # print(f'--> sharpe_ratio is: {sharpe_ratio} using {data_point_count} data points')
+    elif command == "sharpe_ratio":
+        response: dict = processor.calc_sharpe_ratio_sql("lulu", '2022-10-01', '2023-10-01')
+        response = store_sharpe_ratio(response["sharpe_ratio"], "lulu", response["start_date"], response["end_date"])
+        if response == True:
+            print(f'-->sharpe ratio calculated and stored')
+        else:
+            print(f'-->error storing sharpe ratio response is: {response}')
 
     # response = sic_lookup("lulu")
     elif command == "sic_lookup":
