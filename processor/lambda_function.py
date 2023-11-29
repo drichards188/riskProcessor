@@ -175,8 +175,40 @@ def process_market_data(data):
     return True
 
 
-def calculate_correlation():
-    return
+# todo
+def calculate_correlation(symbol1: str, symbol2: str):
+    # when pulling the data, we have to compare the same dates
+    db_helper = DbHelper()
+
+    symbol1_data = []
+    symbol2_data = []
+
+    statement = f"SELECT Date, Close FROM stocks WHERE Symbol='{symbol1}'"
+    result = db_helper.execute_query(statement)
+    for row in result:
+        symbol1_data.append(row)
+
+    statement = f"SELECT Date, Close FROM stocks WHERE Symbol='{symbol2}'"
+    result = db_helper.execute_query(statement)
+    for row in result:
+        symbol2_data.append(row)
+
+    df1 = pd.DataFrame(symbol1_data)
+    df2 = pd.DataFrame(symbol2_data)
+
+
+    merged_df = pd.merge(df1, df2, on='Date')
+
+    df1 = []
+    df2 = []
+
+    try:
+        correlation = merged_df["Close_x"].corr(merged_df["Close_y"])
+    except Exception as e:
+        print(f'--> error is: {e}')
+        raise e
+
+    return True
 
 
 def sic_lookup_table(table: str):
