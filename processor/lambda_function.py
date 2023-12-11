@@ -3,7 +3,8 @@ import json
 import os
 import time
 from array import array
-
+import re
+from collections import Counter
 import numpy as np
 import pandas as pd
 import requests
@@ -116,7 +117,8 @@ def calc_sharpe_ratio_sql(symbol: str, start_date: str, end_date: str) -> dict:
 
             sharpe_ratio = np.mean(excess_returns) / np.std(excess_returns)
 
-            reply = {"sharpe_ratio": sharpe_ratio, "data_point_count": data_point_count, "start_date": start_date, "end_date": end_date}
+            reply = {"sharpe_ratio": sharpe_ratio, "data_point_count": data_point_count, "start_date": start_date,
+                     "end_date": end_date}
 
             return reply
         else:
@@ -266,6 +268,29 @@ def sic_lookup_table(table: str):
                 i += 1
 
 
+def process_efficiency_ratio(closes: list):
+    date_list: list = []
+
+    # closes: list = [360.2, 354.66, 363.57, 371.44, 368.24, 366.99, 374.4, 401.835, 412.19, 404.77, 394.58, 389.0,
+    #                 392.08, 398.335, 396.12, 386.0, 384.37, 387.75, 389.01, 385.26, 398.7, 406.27, 404.505, 406.0,
+    #                 409.32, 404.69, 404.89, 409.8, 421.69, 431.4452, 416.551, 421.04, 422.775, 425.75, 428.19, 426.3501,
+    #                 430.05, 427.09, 428.595, 438.6, 447.6, 452.23, 452.525, 458.267, 460.6, 448.81]
+    i = 0
+    while i < len(closes):
+        date_list.append(i)
+        i += 1
+
+    data = {"day": date_list, "close": closes}
+    df = pd.DataFrame(data)
+
+    numpy_close = np.log(closes)
+
+    df['direction'] = df['close'].diff(3).abs()
+    df['volatility'] = df['close'].diff().abs().rolling(window=3).sum()
+    efficiency_ratio = df['direction'] / df['volatility']
+    return efficiency_ratio
+
+
 def translate_sic_code(code: str) -> str:
     if code:
         db_helper = DbHelper()
@@ -275,3 +300,82 @@ def translate_sic_code(code: str) -> str:
         for row in result:
             industry_title = row[0]
             return industry_title
+
+
+def most_common_words(filename):
+    # Read file
+    here = os.path.dirname(os.path.abspath(__file__))
+    filename = os.path.join(here, f"../lib{filename}")
+    try:
+        with open(filename, 'r') as file:
+            text = file.read()
+    except Exception as e:
+        print(f"most_common_words exception is {e}")
+        return e
+
+    # Tokenize the text into words (considering only alphanumeric words)
+    words = re.findall(r'\b\w+\b', text.lower())
+
+    # Count the frequency of each word
+    word_count = Counter(words)
+
+    return dict(word_count)
+
+
+def clean_transcript_count(map_reduce: dict) -> dict:
+    delete_words = ["the", "and", "a", "an", "in", "on", "at", "for", "with", "without", "about", "against", "between",
+                    "into", "through", "during", "before", "after", "to", "from", "in", "out", "on", "off", "again",
+                    "further", "then", "once", "here", "there", "when", "where", "why", "how", "all", "any", "both",
+                    "each", "few", "more", "most", "other", "some", "such", "no", "nor", "not", "only", "own", "same",
+                    "so", "than", "too", "very", "can", "will", "just", "should", "now", "we", "our", "of", "you",
+                    "that", "i", "is", "are", "it", "s", "re", "as", "this", "have"]
+    for word in delete_words:
+        if word in map_reduce:
+            del map_reduce[word]
+
+    return map_reduce
+
+
+def run_map_reduce(filepath: str):
+    try:
+        word_frequencies = most_common_words(filepath)
+
+        cleaned_count = clean_transcript_count(word_frequencies)
+
+        sorted_dict = dict(sorted(cleaned_count.items(), key=lambda item: item[1], reverse=True))
+
+        return sorted_dict
+    except Exception as e:
+        print(f"run_map_reduce exception is {e}")
+        return e
+
+
+def run_transcript_correlation(filepath1: str, filepath2: str):
+    # file = "../processor/LULU-Q32023.txt"
+    filepath1 = "/LULU-Q32023.txt"
+    filepath2 = "/LULU-Q22023.txt"
+    try:
+        lulu1 = run_map_reduce(filepath1)
+        lulu2 = run_map_reduce(filepath2)
+
+        comparison = {}
+
+        keyword = []
+        transcript1 = []
+        transcript2 = []
+
+        for word in lulu1:
+            if word in lulu2:
+                keyword.append(word)
+                transcript1.append(lulu1[word])
+                transcript2.append(lulu2[word])
+                # comparison[word] = [lulu1[word],lulu2[word]]
+
+        df_data = {"keyword": keyword, "transcript1": transcript1, "transcript2": transcript2}
+
+        df = pd.DataFrame(df_data)
+
+        print(df.head())
+    except Exception as e:
+        print(f"exception is {e}")
+    print("--> done")

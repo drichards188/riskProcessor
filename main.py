@@ -3,6 +3,7 @@ from enum import Enum
 
 import pandas as pd
 
+import hackathon
 import retrieve_data
 import processor
 import store_data
@@ -82,11 +83,32 @@ def run_store_symbols_data(symbols: list):
 
 
 if __name__ == '__main__':
-    command: str = "sharpe_ratio"
+    # response = retrieve_data.get_from_market_data("lulu")
+    # print(response)
+
+    command: str = "transcript_correlation"
 
     if command == "retrieve":
-        response = retrieve_data.handler({"symbol": "sam"}, None)
+        response = retrieve_data.handler({"symbol": "lulu"}, None)
         storage_response = store_data.store_df(response, "stocks")
+
+    elif command == "transcript_correlation":
+        processor.run_transcript_correlation("./LULU-Q32023.txt", "./LULU-Q22023.txt")
+
+    elif command == "efficiency":
+        try:
+            market_data = retrieve_data.get_from_market_data("lulu", "2023-10-5", "2023-12-8")
+            response = processor.process_efficiency_ratio(market_data)
+            df = pd.DataFrame(response, columns=["efficiency_ratio"])
+            print(f'--> response is: {response}')
+        except Exception as e:
+            print(f'--> error is: {e}')
+
+    elif command == "hackathon":
+        response = hackathon.lambda_function.lambda_handler({"symbol": "LULU", "expression": "portfolio"}, None)
+
+    elif command == "market_data":
+        response = retrieve_data.get_from_market_data("lulu", "2023-10-5", "2023-12-8")
 
     elif command == "correlation":
         response = calculate_correlation("msft", "aapl")
