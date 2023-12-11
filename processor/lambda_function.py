@@ -48,6 +48,17 @@ def get_json(filenubs: list) -> dict:
                 print(f'error: {e}')
         return data
 
+def process_exchange_json(data: dict):
+    symbols = []
+    exchange_name = []
+    last_updated = []
+    for company in data["nyse_list"]:
+        symbols.append(company["ACT Symbol"])
+        exchange_name.append("nyse")
+        last_updated.append("2023-11-12")
+
+    return {"symbol": symbols, "exchange_name": exchange_name, "last_updated": last_updated}
+
 
 def calculate_week_difference(week_data):
     difference = float(week_data["4. close"]) - float(week_data["1. open"])
@@ -305,7 +316,7 @@ def translate_sic_code(code: str) -> str:
 def most_common_words(filename):
     # Read file
     here = os.path.dirname(os.path.abspath(__file__))
-    filename = os.path.join(here, f"../lib{filename}")
+    filename = os.path.join(here, f"../lib/{filename}")
     try:
         with open(filename, 'r') as file:
             text = file.read()
@@ -352,8 +363,8 @@ def run_map_reduce(filepath: str):
 
 def run_transcript_correlation(filepath1: str, filepath2: str):
     # file = "../processor/LULU-Q32023.txt"
-    filepath1 = "/LULU-Q32023.txt"
-    filepath2 = "/LULU-Q22023.txt"
+    filepath1 = "LULU-Q32023.txt"
+    filepath2 = "LULU-Q22023.txt"
     try:
         lulu1 = run_map_reduce(filepath1)
         lulu2 = run_map_reduce(filepath2)

@@ -49,6 +49,7 @@ def handler(event, context):
 def store_df(df, table_name: str):
     try:
         df.to_sql(table_name, engine, if_exists='append', index=False)
+        return "success"
     except Exception as e:
         print(f'--> error is: {e}')
         raise e

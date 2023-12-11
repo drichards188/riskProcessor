@@ -13,10 +13,12 @@ from retrieve_data import get_from_market_data
 from store_data.lambda_function import store_sharpe_ratio
 
 
-def retrieve_nasdaq_symbols():
+def retrieve_nasdaq_symbols(exchange_file):
     try:
-        nasdaq_list = processor.get_json(["nasdaq_list"])
-        df = pd.DataFrame(nasdaq_list)
+        nasdaq_list = processor.get_json([exchange_file])
+        processed_response = processor.process_exchange_json(nasdaq_list)
+        df = pd.DataFrame(processed_response)
+        return df
 
         nasdaq_symbol_list = []
 
@@ -24,7 +26,8 @@ def retrieve_nasdaq_symbols():
             key = key[1][0]
             symbol = key["Symbol"]
             nasdaq_symbol_list.append(symbol)
-        print("nasdaq symbols collected")
+        print("exchange symbols collected")
+        return "success"
 
     except Exception as e:
         print(f'--> error is: {e}')
@@ -86,11 +89,16 @@ if __name__ == '__main__':
     # response = retrieve_data.get_from_market_data("lulu")
     # print(response)
 
-    command: str = "transcript_correlation"
+    command: str = "exchange_symbols"
 
     if command == "retrieve":
         response = retrieve_data.handler({"symbol": "lulu"}, None)
         storage_response = store_data.store_df(response, "stocks")
+
+    elif command == "exchange_symbols":
+        response = retrieve_nasdaq_symbols("nyse_list")
+        store_data_response = store_data.store_df(response, "exchangeSymbols")
+        print(f'--> store_data_response is: {store_data_response}')
 
     elif command == "transcript_correlation":
         processor.run_transcript_correlation("./LULU-Q32023.txt", "./LULU-Q22023.txt")
@@ -135,4 +143,4 @@ if __name__ == '__main__':
     # run_store_symbols_data(symbols)
     # read_copied_txt_symbols()
     # read_txt_symbols()
-    # retrieve_nasdaq_symbols()
+
