@@ -57,7 +57,7 @@ def process_exchange_json(data: dict):
         exchange_name.append("nyse")
         last_updated.append("2023-11-12")
 
-    return {"symbol": symbols, "exchange_name": exchange_name, "last_updated": last_updated}
+    return {"symbol": symbols, "exchange": exchange_name, "last_updated": last_updated}
 
 
 def calculate_week_difference(week_data):
@@ -231,7 +231,7 @@ def sic_lookup_table(table: str):
         api_key = os.environ.get('POLYGON_API_KEY')
         db_helper = DbHelper()
 
-        statement = f"SELECT Symbol FROM indexSymbols;"
+        statement = f"SELECT Symbol FROM exchangeSymbols;"
 
         result = db_helper.execute_query(statement)
 

@@ -89,15 +89,55 @@ if __name__ == '__main__':
     # response = retrieve_data.get_from_market_data("lulu")
     # print(response)
 
-    command: str = "exchange_symbols"
+    command: str = "alpha_vantage"
 
     if command == "retrieve":
-        response = retrieve_data.handler({"symbol": "lulu"}, None)
-        storage_response = store_data.store_df(response, "stocks")
+        symbol_list = ['ABNB',
+                       'ABT',
+                       'ACGL',
+                       'ACN',
+                       'ADBE',
+                       'ADI',
+                       'ADM',
+                       'ADP',
+                       'ADSK',
+                       'AEE',
+                       'AEP'
+                       ]
+        for symbol in symbol_list:
+            response = retrieve_data.handler({"symbol": symbol}, None)
+            storage_response = store_data.store_df(response, "stocks")
+
+    elif command == "alpha_vantage":
+        try:
+            symbol_list = [
+                           'AIG',
+                           'AJG',
+                           'AKAM',
+                           'ALB',
+                           'ALGN',
+                           'ALL'
+                           ]
+            for symbol in symbol_list:
+                symbol = symbol.lower()
+                response = retrieve_data.fetch_alpha_vantage_data(symbol)
+                dates = []
+                symbols = []
+                values = []
+                for row in response:
+                    dates.append(row)
+                    symbols.append(symbol.upper())
+                    values.append(response[row]["4. close"])
+                frame_data = {"week_date": dates, "symbol": symbols, "close": values}
+                df = pd.DataFrame(frame_data)
+                storage_response = store_data.store_df(df, "stocks_week")
+        except Exception as e:
+            print(f'--> error is: {e}')
+
 
     elif command == "exchange_symbols":
         response = retrieve_nasdaq_symbols("nyse_list")
-        store_data_response = store_data.store_df(response, "exchangeSymbols")
+        store_data_response = store_data.store_df(response, "exchange_symbols")
         print(f'--> store_data_response is: {store_data_response}')
 
     elif command == "transcript_correlation":
@@ -116,7 +156,21 @@ if __name__ == '__main__':
         response = hackathon.lambda_function.lambda_handler({"symbol": "LULU", "expression": "portfolio"}, None)
 
     elif command == "market_data":
-        response = retrieve_data.get_from_market_data("lulu", "2023-10-5", "2023-12-8")
+        symbol_list = ['ABNB',
+                       'ABT',
+                       'ACGL',
+                       'ACN',
+                       'ADBE',
+                       'ADI',
+                       'ADM',
+                       'ADP',
+                       'ADSK',
+                       'AEE',
+                       'AEP'
+                       ]
+        for symbol in symbol_list:
+            response = retrieve_data.get_from_market_data("lulu", "2022-10-01", "2023-12-01")
+            storage_response = store_data.store_df(response, "stocks")
 
     elif command == "correlation":
         response = calculate_correlation("msft", "aapl")
@@ -143,4 +197,3 @@ if __name__ == '__main__':
     # run_store_symbols_data(symbols)
     # read_copied_txt_symbols()
     # read_txt_symbols()
-
