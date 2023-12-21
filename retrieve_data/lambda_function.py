@@ -1,6 +1,8 @@
 import logging
 import os
+from datetime import datetime, timedelta
 
+import pandas as pd
 import requests
 import json
 
@@ -59,6 +61,7 @@ def write_file(symbol: str, data: json) -> bool:
 
 def fetch_alpha_vantage_data(symbol: str):
     if symbol:
+        print(f"--> getting data for {symbol}")
         api_key = os.environ.get('ALPHAVANTAGE_API_KEY')
         url = f'https://www.alphavantage.co/query?function=TIME_SERIES_WEEKLY&symbol={symbol}&apikey={api_key}'
 
@@ -69,7 +72,9 @@ def fetch_alpha_vantage_data(symbol: str):
         if response.status_code == 200:
             # Print the content of the response
             # print(response.text)
-            return response.text
+            data = json.loads(response.text)
+
+            return data["Weekly Time Series"]
         else:
             # Print an error message if the request was not successful
             print(f"Request failed with status code {response.status_code}")
@@ -104,13 +109,21 @@ def get_from_qandl(symbol: str):
         else:
             # Print an error message if the request was not successful
             print(f"---> response fail: {response.text}")
+            raise Exception(f"Request failed with message {response.text}")
 
 
-def get_from_market_data(symbol: str):
+def get_from_market_data(symbol: str, start_date: str, end_date: str):
     if symbol:
+        # need to add time constraint or get limited results
         api_key = os.environ.get('MARKET_DATA_API_KEY')
-        # url = f'https://marketdata.websol.barchart.com/getQuote.json?apikey={api_key}&symbols={symbol}'
-        url = f'https://api.marketdata.app/v1/stocks/candles/D/AAPL?apikey={api_key}'
+        if start_date and end_date:
+            url = f'https://api.marketdata.app/v1/stocks/candles/D/{symbol}?token={api_key}&from={start_date}&to={end_date}'
+        else:
+            current_date = datetime.now()
+            one_year_ago = current_date - timedelta(days=365)
+            one_year_ago_formatted = one_year_ago.strftime("%Y-%m-%d")
+            current_date_formatted = current_date.strftime("%Y-%m-%d")
+            url = f'https://api.marketdata.app/v1/stocks/candles/D/{symbol}?token={api_key}&from={start_date}&to={end_date}'
         # Send a GET request
         response = requests.get(url)
 
@@ -120,11 +133,15 @@ def get_from_market_data(symbol: str):
             # print(response.text)
             decoded = response.content.decode()
             json_data = json.loads(decoded)
+            # data doesn't have dates
+            df = pd.DataFrame(json_data["l"])
             return json_data["l"]
 
         else:
             # Print an error message if the request was not successful
+            response_message = response.text
             print(f"---> response fail: {response.text}")
+
 
 
 def sic_lookup(symbol: str):

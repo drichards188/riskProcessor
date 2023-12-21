@@ -1,5 +1,6 @@
 import os
 
+from lib import DbHelper
 from processor import get_json
 import pandas as pd
 import mysql.connector
@@ -37,7 +38,7 @@ def handler(event, context):
         }
         final_df = pd.DataFrame(all_closes)
         # print(f'--> final_df is: {final_df.head()}')
-        sql_df = final_df.to_sql('stocks', engine, if_exists='append')
+        sql_df = final_df.to_sql('stocks', engine, if_exists='append', index=False)
         print(f'--> sql_df is: {sql_df}')
         return True
     except Exception as e:
@@ -47,7 +48,9 @@ def handler(event, context):
 
 def store_df(df, table_name: str):
     try:
-        df.to_sql(table_name, engine, if_exists='append')
+        print(f"--> storing data to {table_name}")
+        df.to_sql(table_name, engine, if_exists='append', index=False)
+        return "success"
     except Exception as e:
         print(f'--> error is: {e}')
         raise e
@@ -78,12 +81,19 @@ def store_symbols(symbol_list: list[str], index_symbol: str):
 
 def execute_sql(df, table_name: str):
     try:
-        df.to_sql(table_name, engine, if_exists='append')
+        df.to_sql(table_name, engine, if_exists='append', index=False)
     except Exception as e:
         print(f'--> error is: {e}')
         raise e
 
 
-event = {"symbol": "aapl"}
-context = {}
-# handler(event, context)
+def store_sharpe_ratio(ratio: float, symbol: str, start_date: str, end_date: str):
+    try:
+        statement = f"INSERT INTO calculations (start_date, end_date, symbol, sharpe_ratio) VALUES ('{start_date}', '{end_date}', '{symbol}', '{ratio}');"
+
+        db_helper = DbHelper()
+        db_helper.execute_update(statement)
+        return True
+    except Exception as e:
+        print(f'--> error is: {e}')
+        raise e

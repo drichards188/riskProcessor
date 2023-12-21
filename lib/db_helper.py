@@ -18,7 +18,7 @@ class DbHelper():
 
     def store_df(self, df: pd.DataFrame):
         try:
-            store_resp = df.to_sql('stocks', self.engine, if_exists='append')
+            store_resp = df.to_sql('stocks', self.engine, if_exists='append', index=False)
             return store_resp
         except Exception as e:
             print(f'--> error is: {e}')
