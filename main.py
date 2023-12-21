@@ -111,13 +111,9 @@ if __name__ == '__main__':
     elif command == "alpha_vantage":
         try:
             symbol_list = [
-                           'AIG',
-                           'AJG',
-                           'AKAM',
-                           'ALB',
-                           'ALGN',
-                           'ALL'
-                           ]
+                'AWK',
+                'AXP'
+            ]
             for symbol in symbol_list:
                 symbol = symbol.lower()
                 response = retrieve_data.fetch_alpha_vantage_data(symbol)
@@ -132,6 +128,8 @@ if __name__ == '__main__':
                 df = pd.DataFrame(frame_data)
                 storage_response = store_data.store_df(df, "stocks_week")
         except Exception as e:
+            if e == KeyError('Weekly Time Series'):
+                print(f'--> api rate limit reached')
             print(f'--> error is: {e}')
 
 
