@@ -1,4 +1,5 @@
 import json
+from datetime import date
 from enum import Enum
 
 import pandas as pd
@@ -89,7 +90,8 @@ if __name__ == '__main__':
     # response = retrieve_data.get_from_market_data("lulu")
     # print(response)
 
-    command: str = "alpha_vantage"
+    command = "alpha_vantage"
+    # command: str = "correlation"
 
     if command == "retrieve":
         symbol_list = ['ABNB',
@@ -111,10 +113,10 @@ if __name__ == '__main__':
     elif command == "alpha_vantage":
         try:
             symbol_list = [
-                'AWK',
-                'AXP'
+
             ]
             for symbol in symbol_list:
+                print(f'--> getting data for: {symbol}')
                 symbol = symbol.lower()
                 response = retrieve_data.fetch_alpha_vantage_data(symbol)
                 dates = []
@@ -154,7 +156,7 @@ if __name__ == '__main__':
         response = hackathon.lambda_function.lambda_handler({"symbol": "LULU", "expression": "portfolio"}, None)
 
     elif command == "market_data":
-        symbol_list = ['ABNB',
+        symbol_list = ['AAPL', 'ABNB',
                        'ABT',
                        'ACGL',
                        'ACN',
@@ -171,12 +173,81 @@ if __name__ == '__main__':
             storage_response = store_data.store_df(response, "stocks")
 
     elif command == "correlation":
-        response = calculate_correlation("msft", "aapl")
-        print(f'--> response is: {response}')
 
-    # response: list[str] = get_from_market_data("msft")
-    # record_count = response.count()
-    # processor_response = process_market_data(response)
+        symbol_list = [
+            'ADBE',
+            'ADI',
+            'ADSK',
+            'AKAM',
+            'AMAT',
+            'AMD',
+            'ANET',
+            'ANSS',
+            'APH',
+            'AVGO',
+            'CDNS',
+            'CDW',
+            'CSCO',
+            'CTSH',
+            'FICO',
+            'FTNT',
+            'GLW',
+            'HPE',
+            'HPQ',
+            'IBM',
+            'INTC',
+            'INTU',
+            'IT',
+            'KEYS',
+            'KLAC',
+            'LRCX',
+            'MCHP',
+            'MPWR',
+            'MSFT',
+            'MSI',
+            'MU',
+            'NOW',
+            'NTAP',
+            'NVDA',
+            'NXPI',
+            'ON'
+        ]
+
+        for base_symbol in symbol_list:
+
+            sector = processor.lookup_sector(base_symbol)
+
+            matching_sector = processor.get_matching_sector_symbols(sector)
+
+            sector_symbols = processor.get_sector_symbols(matching_sector)
+
+            corr_calcs = []
+
+            for symbol in sector_symbols:
+                print(f'--> running cor on: {base_symbol} and {symbol}')
+                corr_symbol = symbol
+
+                response = calculate_correlation(base_symbol, corr_symbol)
+                if response == "error":
+                    print(f'--> no data for {corr_symbol}')
+                    continue
+                corr_calcs.append((corr_symbol, response))
+                today = date.today()
+                frame = {"date": [today], "base_symbol": [base_symbol], "corr_symbol": [corr_symbol],
+                         "correlation": [response]}
+                df = pd.DataFrame(frame)
+
+                if response == None or response == float('nan'):
+                    continue
+                store_response = store_data.store_df(df, "spdr_calculations")
+                print(f'--> response is: {response}')
+
+                sorted_data = sorted(corr_calcs, key=lambda x: x[1])
+                print(f'--> least correlated is: {sorted_data[0]}')
+
+        # response: list[str] = get_from_market_data("msft")
+        # record_count = response.count()
+        # processor_response = process_market_data(response)
 
     elif command == "sharpe_ratio":
         response: dict = processor.calc_sharpe_ratio_sql("lulu", '2022-10-01', '2023-10-01')
