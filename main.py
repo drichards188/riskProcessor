@@ -113,7 +113,26 @@ if __name__ == '__main__':
     elif command == "alpha_vantage":
         try:
             symbol_list = [
-
+                'DIS',
+                'EA',
+                'FOX',
+                'FOXA',
+                'GOOG',
+                'GOOGL',
+                'IPG',
+                'LYV',
+                'META',
+                'MTCH',
+                'NFLX',
+                'NWS',
+                'NWSA',
+                'OMC',
+                'PARA',
+                'T',
+                'TMUS',
+                'TTWO',
+                'VZ',
+                'WBD'
             ]
             for symbol in symbol_list:
                 print(f'--> getting data for: {symbol}')
