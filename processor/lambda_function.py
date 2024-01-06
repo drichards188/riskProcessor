@@ -189,8 +189,7 @@ def process_qandl_data(data: json, symbol: str) -> pd.DataFrame:
 def process_market_data(data):
     return True
 
-
-# todo
+# todo corr function is wrong??
 def calculate_correlation(symbol1: str, symbol2: str):
     # when pulling the data, we have to compare the same dates
     db_helper = DbHelper()
@@ -198,32 +197,79 @@ def calculate_correlation(symbol1: str, symbol2: str):
     symbol1_data = []
     symbol2_data = []
 
-    statement = f"SELECT Date, Close FROM stocks WHERE Symbol='{symbol1}'"
+    statement = f"SELECT week_date, close FROM stocks_week WHERE symbol='{symbol1}'"
     result = db_helper.execute_query(statement)
     for row in result:
         symbol1_data.append(row)
 
-    statement = f"SELECT Date, Close FROM stocks WHERE Symbol='{symbol2}'"
+    if symbol1_data is [] or symbol1_data is None:
+        return "error"
+
+    statement = f"SELECT week_date, close FROM stocks_week WHERE symbol='{symbol2}'"
     result = db_helper.execute_query(statement)
     for row in result:
         symbol2_data.append(row)
+
+    if symbol2_data is [] or symbol2_data is None or len(symbol2_data) == 0:
+        return "error"
 
     df1 = pd.DataFrame(symbol1_data, columns=['Date', symbol1])
     df2 = pd.DataFrame(symbol2_data, columns=['Date', symbol2])
 
     merged_df = pd.merge(df1, df2, on='Date')
 
+    keys = merged_df.keys()
+
+    key1 = keys[1]
+    key2 = keys[2]
+
     df1 = None
     df2 = None
 
     try:
         # todo is the corr number wrong because I'm missing data?
-        correlation = merged_df["Close_x"].corr(merged_df["Close_y"])
+        correlation = merged_df[key1].corr(merged_df[key2])
     except Exception as e:
         print(f'--> error is: {e}')
-        raise e
+        return "error"
+        # raise e
 
-    return True
+    return correlation
+
+def lookup_sector(symbol: str) -> str:
+    if symbol:
+        db_helper = DbHelper()
+        statement = f"SELECT Sector FROM spdr_sectors WHERE Symbol='{symbol}';"
+        result = db_helper.execute_query(statement)
+
+        for row in result:
+            sector = row[0]
+            return sector
+
+
+def get_sector_symbols(sector: str) -> list:
+    if sector:
+        db_helper = DbHelper()
+        statement = f"SELECT Symbol FROM spdr_sectors WHERE Sector='{sector}';"
+        result = db_helper.execute_query(statement)
+
+        symbols = []
+
+        for row in result:
+            symbol = row[0]
+            symbols.append(symbol)
+
+        return symbols
+
+def get_matching_sector_symbols(sector: str) -> str:
+    if sector:
+        db_helper = DbHelper()
+        statement = f"SELECT match_name FROM index_matches WHERE index_name='{sector}';"
+        result = db_helper.execute_query(statement)
+
+        for row in result:
+            symbol = row[0]
+            return symbol
 
 
 def sic_lookup_table(table: str):
