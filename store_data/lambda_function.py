@@ -87,9 +87,9 @@ def execute_sql(df, table_name: str):
         raise e
 
 
-def store_sharpe_ratio(ratio: float, symbol: str, start_date: str, end_date: str):
+def store_sharpe_ratio(ratio: float, symbol: str):
     try:
-        statement = f"INSERT INTO calculations (start_date, end_date, symbol, sharpe_ratio) VALUES ('{start_date}', '{end_date}', '{symbol}', '{ratio}');"
+        statement = f"INSERT INTO sharpe_calc (symbol, sharpe_ratio) VALUES ('{symbol}', '{ratio}');"
 
         db_helper = DbHelper()
         db_helper.execute_update(statement)

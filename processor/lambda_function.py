@@ -101,9 +101,9 @@ def handle_get_sharpe_ratio(security_symbol: str) -> float:
     return sharpe_ratio_annualized
 
 
-def calc_sharpe_ratio_sql(symbol: str, start_date: str, end_date: str) -> dict:
+def calc_sharpe_ratio_sql(symbol: str) -> dict:
     try:
-        statement = f"SELECT Close FROM stocks WHERE Symbol='{symbol}' AND Date >= '{start_date}' AND Date <= '{end_date}';"
+        statement = f"SELECT close FROM stocks_week WHERE Symbol='{symbol}';"
         db_helper = DbHelper()
         result = db_helper.execute_query(statement)
 
@@ -128,8 +128,7 @@ def calc_sharpe_ratio_sql(symbol: str, start_date: str, end_date: str) -> dict:
 
             sharpe_ratio = np.mean(excess_returns) / np.std(excess_returns)
 
-            reply = {"sharpe_ratio": sharpe_ratio, "data_point_count": data_point_count, "start_date": start_date,
-                     "end_date": end_date}
+            reply = {"sharpe_ratio": sharpe_ratio, "data_point_count": data_point_count}
 
             return reply
         else:

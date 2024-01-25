@@ -1,16 +1,11 @@
-import json
 from datetime import date
-from enum import Enum
-
 import pandas as pd
 
 import hackathon
 import retrieve_data
 import processor
 import store_data
-from processor import process_market_data
 from processor.lambda_function import sic_lookup_table, calculate_correlation
-from retrieve_data import get_from_market_data
 from store_data.lambda_function import store_sharpe_ratio
 
 
@@ -90,27 +85,10 @@ if __name__ == '__main__':
     # response = retrieve_data.get_from_market_data("lulu")
     # print(response)
 
-    command = "alpha_vantage"
+    command = "sharpe_ratio"
     # command: str = "correlation"
 
-    if command == "retrieve":
-        symbol_list = ['ABNB',
-                       'ABT',
-                       'ACGL',
-                       'ACN',
-                       'ADBE',
-                       'ADI',
-                       'ADM',
-                       'ADP',
-                       'ADSK',
-                       'AEE',
-                       'AEP'
-                       ]
-        for symbol in symbol_list:
-            response = retrieve_data.handler({"symbol": symbol}, None)
-            storage_response = store_data.store_df(response, "stocks")
-
-    elif command == "alpha_vantage":
+    if command == "alpha_vantage":
         try:
             symbol_list = [
                 'DIS',
@@ -154,11 +132,6 @@ if __name__ == '__main__':
             print(f'--> error is: {e}')
 
 
-    elif command == "exchange_symbols":
-        response = retrieve_nasdaq_symbols("nyse_list")
-        store_data_response = store_data.store_df(response, "exchange_symbols")
-        print(f'--> store_data_response is: {store_data_response}')
-
     elif command == "transcript_correlation":
         processor.run_transcript_correlation("./LULU-Q32023.txt", "./LULU-Q22023.txt")
 
@@ -173,23 +146,6 @@ if __name__ == '__main__':
 
     elif command == "hackathon":
         response = hackathon.lambda_function.lambda_handler({"symbol": "LULU", "expression": "portfolio"}, None)
-
-    elif command == "market_data":
-        symbol_list = ['AAPL', 'ABNB',
-                       'ABT',
-                       'ACGL',
-                       'ACN',
-                       'ADBE',
-                       'ADI',
-                       'ADM',
-                       'ADP',
-                       'ADSK',
-                       'AEE',
-                       'AEP'
-                       ]
-        for symbol in symbol_list:
-            response = retrieve_data.get_from_market_data("lulu", "2022-10-01", "2023-12-01")
-            storage_response = store_data.store_df(response, "stocks")
 
     elif command == "correlation":
 
@@ -269,12 +225,59 @@ if __name__ == '__main__':
         # processor_response = process_market_data(response)
 
     elif command == "sharpe_ratio":
-        response: dict = processor.calc_sharpe_ratio_sql("lulu", '2022-10-01', '2023-10-01')
-        response = store_sharpe_ratio(response["sharpe_ratio"], "lulu", response["start_date"], response["end_date"])
-        if response == True:
-            print(f'-->sharpe ratio calculated and stored')
-        else:
-            print(f'-->error storing sharpe ratio response is: {response}')
+        symbol_list = [
+            'AAPL',
+            'ACN',
+            'ADBE',
+            'ADI',
+            'ADSK',
+            'AKAM',
+            'AMAT',
+            'AMD',
+            'ANET',
+            'ANSS',
+            'APH',
+            'AVGO',
+            'avy',
+            'CDNS',
+            'CDW',
+            'CRM',
+            'CSCO',
+            'CTSH',
+            'FICO',
+            'FTNT',
+            'GLW',
+            'HPE',
+            'HPQ',
+            'IBM',
+            'INTC',
+            'INTU',
+            'IT',
+            'KEYS',
+            'KLAC',
+            'LRCX',
+            'MCHP',
+            'MPWR',
+            'MSFT',
+            'MSI',
+            'MU',
+            'NOW',
+            'NTAP',
+            'NVDA',
+            'NXPI',
+            'ON',
+            'ORCL'
+
+        ]
+
+        for symbol in symbol_list:
+
+            response: dict = processor.calc_sharpe_ratio_sql(symbol)
+            response = store_sharpe_ratio(response["sharpe_ratio"], symbol)
+            if response == True:
+                print(f'-->sharpe ratio calculated and stored')
+            else:
+                print(f'-->error storing sharpe ratio response is: {response}')
 
     # response = sic_lookup("lulu")
     elif command == "sic_lookup":
