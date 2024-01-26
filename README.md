@@ -1,4 +1,4 @@
-# Gojenga Backend
+# Gojenga Backend [WIP]
 
 ## About The Project
 ***
@@ -12,8 +12,6 @@ Schwab. It contains limited banking, portfolio, risk and diversification feature
 <li> MySql </li>
 </ol>
 
-## What It Does
-<ul> <li>Pulls data from several open source API's </li>
-<li>stores data in MySql</li>
-<li>Pull data from MySql and calculate risk measures</li>
-</ul>
+## In This Repo
+This repo contains a mess of python and pandas code that
+gathers, processes and stores financial data for the backend to serve to the UI.
