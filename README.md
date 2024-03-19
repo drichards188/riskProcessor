@@ -1,4 +1,4 @@
-# Gojenga Backend [WIP]
+# Gojenga Risk Processor [WIP]
 
 ## About The Project
 ***
